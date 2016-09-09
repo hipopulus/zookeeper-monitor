@@ -1,0 +1,92 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>ZooKeeper Monitor</title>
+<link type="text/css" rel="stylesheet" href="/css/monitor.css" />
+</head>
+<body>
+<div class="nav">
+	<div class="nav-brand"><img style="height: 60px" src="/images/zookeeper_small.gif"/>  ZooKeeper Monitor </div>
+</div>
+	<div class="container"><div class="title"><a href="">刷新</a></div></div>
+    <div th:if="${stat} != null" class="container"> 
+        <div class="title">状态信息 </div>
+        <div class="line"></div>
+        <table>
+            <tbody class="table-body">
+                <tr>
+                    <td class="table-title text-right">ZooKeeper版本：</td><td th:text="${stat.version}"></td>
+                </tr>
+                <tr>
+                    <td class="table-title text-right">延迟（最小/平均/最大）：</td><td th:text="${stat.latency}"></td>
+                </tr>
+                <tr>
+                    <td class="table-title text-right">节点数：</td><td th:text="${stat.nodeCount}"></td>
+                </tr>
+                <tr>
+                    <td class="table-title text-right">模式：</td><td th:text="${stat.Mode}"></td>  
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="container" th:if="${nods} != null" id="nods-region"> 
+        <div class="title">节点信息 <span th:text="${path}"></span></div>
+        <div class="line"></div>
+        <div th:each="item : ${nods}">
+            <div class="node"  th:attr="path = ${path + '/' + item}"><span class="operator">＋ </span><span th:text="${item}"></span></div>
+            <div class="child-node" id="child-node"></div>
+        </div>
+    </div>
+    
+    <div class="container" th:if="${stat} != null"> 
+        <div class="title">连接信息 </div>
+        <div class="line"></div>
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th>客户端<span th:text="${'（' + stat.Connections + '）'}"></span></th>
+                    <th>队列</th>
+                    <th>接收<span th:text="${'（' + stat.Received + '）'}"></span></th>
+                    <th>发送<span th:text="${'（' + stat.Sent + '）'}"></span></th>
+                </tr>
+            </thead>
+            <tbody class="table-body">
+                <tr th:each="item : ${stat.Clients}">
+                    <td th:text="${item.client}"></td>
+                    <td th:text="${item.queued}" class="text-right"></td>
+                    <td th:text="${item.recved}" class="text-right"></td>
+                    <td th:text="${item.sent}" class="text-right"></td>  
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script type="text/javascript" src="/js/vendor/jquery.min.js"></script>
+<script type="text/javascript">
+  	$(document).ready(function(){
+      	$('#nods-region').on('click', '.node', function() {
+        	var _this = $(this);
+      		var path = _this.attr('path');
+        	var childNodes = _this.next();
+      		var toggled =  _this.prop('toggled');
+      		_this.prop('toggled', !toggled);
+      		childNodes.empty();
+      		if(toggled) {
+      			_this.children('.operator').first().text('＋ ');
+      		} else {
+      			_this.children('.operator').first().text('－ ');
+      			$.getJSON('/path' + path, function(data){ 
+              		if(data.code == 0) {
+                		$.each(data.nods, function(index, node) {
+                  			var nodeHtml = $('<div class="node" path="' + data.path + '/' + node + '"><span class="operator">＋ </span><span>' + node + '</span></div><div id="child-node" class="child-node"></div>');
+                			childNodes.append(nodeHtml);
+                		});
+              		}
+              	}); 
+      		}
+      	});
+  	});
+</script>
+</html>

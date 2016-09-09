@@ -1,2 +1,1 @@
 # zookeeper-monitor
-Zookeeper Monitor
